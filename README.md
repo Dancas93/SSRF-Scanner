@@ -22,6 +22,10 @@ for a list of url: `python3 ssrf.py -f urls.txt`
 With SSRF-Scanner you can also perform a reverse connection attack, example:
 `python3 ssrf.py -u https://google.com -b http://pingb.in/p/bac42078d9061876cbc7ecf2220b`
 
+
+****Results****
+SSRF-Scanner 
+
 ****Todo****
 - [ ] refine protocols attack
 - [ ] add support to cookie
