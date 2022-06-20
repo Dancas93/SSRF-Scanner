@@ -4,8 +4,20 @@ SSRF(Server-side request forgery) is a trending vulnerability identified in most
 
 **Installation**
 
-`git clone https://github.com/Dancas93/SSRF-Scanner.git
+```
+git clone https://github.com/Dancas93/SSRF-Scanner.git
 cd SSRF-Scanner
-pip3 install requirements.txt`
+pip3 install requirements.txt
+```
 
 **How To Use**
+Print help menu
+'python3 ssrf.py -h
+
+You can choose if analyze a single url or a list of urls, example:
+for a single url: 'python3 ssrf.py -u https://google.com
+for a list of url: 'python3 ssrf.py -f urls.txt
+
+With SSRF-Scanner you can also perform a reverse connection attack, example:
+'python3 ssrf.py -u https://google.com -b http://pingb.in/p/bac42078d9061876cbc7ecf2220b 
+
