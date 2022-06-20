@@ -23,7 +23,7 @@ outputFilename = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
 completeFileName = "output/"+outputFilename+".txt"
 completeFileNameCSV = "output/"+outputFilename+".csv"
 os.makedirs(os.path.dirname(completeFileName), exist_ok=True)
-#completeFileName = os.path.join("/output", outputFilename+".txt") 
+
 #Initialize colorama
 colorama.init(autoreset=True)
 
@@ -75,8 +75,7 @@ def checkInputParameter():
     try:
         # Parsing argument
         arguments, values = getopt.getopt(argumentList, options, long_options)
-        #print(arguments)
-        #print(values)
+
         
         # checking each argument
         for currentArgument, currentValue in arguments:
@@ -84,17 +83,13 @@ def checkInputParameter():
                 printHelp()
 
             elif currentArgument in ("-u", "--url"):
-                #print("Displaying url:", currentValue)
                 parameters['url'] = currentValue
 
             elif currentArgument in ("-b", "--backurl"):
-                #print ("Displaying backurl:", currentValue)
                 global backurl 
                 backurl = currentValue
-                #parameters['backurl'] = currentValue
 
             elif currentArgument in ("-f", "--file"):
-                #print ("Displaying backurl:", currentValue)
                 parameters['filename'] = currentValue
 
     except getopt.error as err:
@@ -160,9 +155,7 @@ def headersScan(url, method, badHeaders="", originalUrl=""):
         resp = http.request(method, url, headers=headers, timeout=timeout, retries=retries)
         return resp
     except Exception as e:
-        #testo = url, method, "Error"
         print(Fore.RED + "Errore di coneessione con l'url: ", url)
-        #logResult(testo)
     return None
 
 def localAttack(url, originalResponse):
@@ -181,15 +174,10 @@ def localAttack(url, originalResponse):
             }
             if(response!=None):
                 if(checkDifferenceinResponse(originalResponse, response)):
-                    #testo = "Risposta differente con l'header: ", badHeader, " staus code: ",response.status, "e dimensione: ", sys.getsizeof(response.data)
                     logInfo['ResponseCode']=str(response.status)
                     logInfo['ResponseSize']=str(sys.getsizeof(response.data))
                     logResult(logInfo, 2)
-                    #print("Risposta differente con il parametro: ", parameter, " staus code: ",response.status, "e dimensione: ", sys.getsizeof(response.text))
-            #else:
-                #testo = "Errore di connessione con l'header: ", badHeader
-                #print(testo)
-                #logResult(logInfo)
+
 
 #TODO: Da perfezionare
 def protocolAttack(url, originalResponse):
@@ -212,9 +200,7 @@ def protocolAttack(url, originalResponse):
             logInfo['ResponseSize']=sys.getsizeof(response.data)
             logResult(logInfo, 2)
     else:
-        #testo = "Errore di connessione con il parametro: ", protocol
         print(Fore.RED + "Errore di connessione con il parametro: ", protocol)
-        #logResult(testo)
 
 def remoteAttack(url):
     #logResult("------REMOTE ATTACK------",2)
@@ -228,8 +214,6 @@ def performAllAttack(url):
     originalResponse = headersScan(url,'GET')
     
     if(originalResponse != None):
-        #logResult("-----------------",2)
-        #logResult(testo,2)
         print("-----------------")
         print("Sto analizzando l'url", url," con staus code iniziale: ", originalResponse.status, " e dimensione: ", sys.getsizeof(originalResponse.data))
         logInfo={
@@ -240,13 +224,13 @@ def performAllAttack(url):
             'ResponseSize':sys.getsizeof(originalResponse.data)
         }
         writeToCSV(logInfo)
-        remoteAttack(url)
+        global backurl 
+        if(backurl!=""):
+            remoteAttack(url)
         #protocolAttack(url, originalResponse) #TODO: Da Valutare
         localAttack(url, originalResponse)
     else:
-        #testo="Errore di connessione con l\'url:",url
         print(Fore.RED + "Errore di connessione con l\'url:",url)
-        #logResult(testo,2)
 
 def checkDifferenceinResponse(response1, response2):
     status1 = response1.status
@@ -261,15 +245,6 @@ def checkDifferenceinResponse(response1, response2):
 def getHostnameFromUrl(url):
     return urlparse(url).netloc
 
-def writeToFile(testo):
-    try:  
-        file = open(completeFileName, "a")
-        #file.write("{httpMethod},{url},{status}".format(httpMethod=httpMethod, url=url, status=status))
-        file.write(testo)
-        file.write("\n")
-        file.close()
-    except Exception as e:
-        print(e)
 
 def writeToCSV(row):
     # field names 
@@ -288,11 +263,8 @@ def writeToCSV(row):
         csvwriter.writerow(row)
 
 def logResult(info, level=1):
-    #info = str(info)
-    #writeToFile(info)
     writeToCSV(info)
-    #if(level==2):
-        #print(info)
+
 
 def scanFile(filename):
     with open(filename) as file:
