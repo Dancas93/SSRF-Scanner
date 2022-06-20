@@ -12,7 +12,7 @@ pip3 install requirements.txt
 
 **How To Use**
 Print help menu
-`python3 ssrf.py -h
+`python3 ssrf.py -h`
 
 You can choose if analyze a single url or a list of urls, example:
 for a single url: `python3 ssrf.py -u https://google.com`
@@ -25,4 +25,4 @@ With SSRF-Scanner you can also perform a reverse connection attack, example:
 - [ ] refine Protocols attack
 - [ ] add support to cookie
 - [ ] add enclosed parameters attack
-- [ ] add application login attack (es. paramters/form)
+- [ ] add application login attack (es. parameters/form)
