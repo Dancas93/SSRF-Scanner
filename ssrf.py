@@ -301,32 +301,3 @@ def main():
     
 
 main()
-
-
-
-'''
-#TODO: Da perfezionare
-def protocolAttack(url, originalResponse):
-    print("------PROTOCOLS ATTACK------")
-
-    for protocol in protocols:
-        newUrl = url+protocol+backurl+'/'
-        response = headersScan(newUrl,'GET',originalUrl=url)
-        logInfo={
-            'Hostname':url, 
-            'HeaderField':'N/A', 
-            'HeaderValue':protocol, 
-            'ResponseCode':'Error',
-            'ResponseSize':'Error'
-        }
-    if(response!=None):
-        if(checkDifferenceinResponse(originalResponse, response)):
-            testo = "Risposta differente con il parametro: ", protocol, " staus code: ",response.status, "e dimensione: ", sys.getsizeof(response.data)
-            logInfo['ResponseCode']=response.status
-            logInfo['ResponseSize']=sys.getsizeof(response.data)
-            logResult(logInfo, 2)
-    else:
-        print(Fore.RED + "Errore di connessione con il parametro: ", protocol)
-
-
-'''
