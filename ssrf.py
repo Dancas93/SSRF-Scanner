@@ -1,4 +1,6 @@
 import sys, getopt, os
+import queue
+from threading import Thread
 from requests import Request, Session
 from requests import ReadTimeout, ConnectTimeout, HTTPError, Timeout, ConnectionError, TooManyRedirects
 import urllib3
@@ -8,15 +10,20 @@ import re
 import csv
 from datetime import datetime
 from urllib.parse import urlparse
+import logging
 import colorama
 from colorama import Fore, Style
 
 
 
+#TODO: Add Get/Post parameter
 
+q = queue.Queue()
+logger = logging.getLogger('ssrflogger')
 
 backurl = ""
 parameters = []
+cloudParameters = []
 headers = []
 protocols = []
 outputFilename = datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
@@ -30,20 +37,16 @@ colorama.init(autoreset=True)
 def printBanner():
     print("""
 
-            ░██████╗░██████╗██████╗░███████╗  ░██████╗░█████╗░░█████╗░███╗░░██╗███╗░░██╗███████╗██████╗░  ██████╗░██╗░░░██╗
-            ██╔════╝██╔════╝██╔══██╗██╔════╝  ██╔════╝██╔══██╗██╔══██╗████╗░██║████╗░██║██╔════╝██╔══██╗  ██╔══██╗╚██╗░██╔╝
-            ╚█████╗░╚█████╗░██████╔╝█████╗░░  ╚█████╗░██║░░╚═╝███████║██╔██╗██║██╔██╗██║█████╗░░██████╔╝  ██████╦╝░╚████╔╝░
-            ░╚═══██╗░╚═══██╗██╔══██╗██╔══╝░░  ░╚═══██╗██║░░██╗██╔══██║██║╚████║██║╚████║██╔══╝░░██╔══██╗  ██╔══██╗░░╚██╔╝░░
-            ██████╔╝██████╔╝██║░░██║██║░░░░░  ██████╔╝╚█████╔╝██║░░██║██║░╚███║██║░╚███║███████╗██║░░██║  ██████╦╝░░░██║░░░
-            ╚═════╝░╚═════╝░╚═╝░░╚═╝╚═╝░░░░░  ╚═════╝░░╚════╝░╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚══╝╚══════╝╚═╝░░╚═╝  ╚═════╝░░░░╚═╝░░░
-
-            ██████╗░░█████╗░███╗░░██╗██╗███████╗██╗░░░░░███████╗
-            ██╔══██╗██╔══██╗████╗░██║██║██╔════╝██║░░░░░██╔════╝
-            ██║░░██║███████║██╔██╗██║██║█████╗░░██║░░░░░█████╗░░
-            ██║░░██║██╔══██║██║╚████║██║██╔══╝░░██║░░░░░██╔══╝░░
-            ██████╔╝██║░░██║██║░╚███║██║███████╗███████╗███████╗
-            ╚═════╝░╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚══════╝╚══════╝╚══════╝
+            ░██████╗░██████╗██████╗░███████╗
+            ██╔════╝██╔════╝██╔══██╗██╔════╝
+            ╚█████╗░╚█████╗░██████╔╝█████╗░░
+            ░╚═══██╗░╚═══██╗██╔══██╗██╔══╝░░
+            ██████╔╝██████╔╝██║░░██║██║░░░░░
+            ╚═════╝░╚═════╝░╚═╝░░╚═╝╚═╝
     """)
+    print("v1.0 - Dancas")
+    print("[WRN] Use with caution. You are responsible for your actions")
+    print("[WRN] Developers assume no liability and are not responsible for any misuse or damage.")
 
 
 def printHelp():
@@ -108,27 +111,32 @@ def loadFiles():
     global headers
     global parameters
     global protocols
-    with open('headers.txt') as file:
+    global cloudParameters
+    with open('utils/headers.txt') as file:
         while line := file.readline():
             header = line.rstrip()
             headers.append(header)
 
-    with open('localIPAttack.txt') as file:
+    with open('utils/localIPAttack.txt') as file:
         while line := file.readline():
             parameter = line.rstrip()
             parameters.append(parameter)
 
-    with open('protocols.txt') as file:
+    with open('utils/protocols.txt') as file:
         while line := file.readline():
             protocol = line.rstrip()
             protocols.append(protocol)
 
+    with open('utils/cloud.txt') as file:
+        while line := file.readline():
+            cloudParameter = line.rstrip()
+            cloudParameters.append(cloudParameter)
 
 
 def headersScan(url, method, badHeaders="", originalUrl=""):
     # Creating a PoolManager instance for sending requests.
     http = urllib3.PoolManager()
-    timeout = 0.5
+    timeout = 1.0
     retries = False
     if(originalUrl==""):
         originalUrl = getHostnameFromUrl(url)
@@ -155,11 +163,12 @@ def headersScan(url, method, badHeaders="", originalUrl=""):
         resp = http.request(method, url, headers=headers, timeout=timeout, retries=retries)
         return resp
     except Exception as e:
-        print(Fore.RED + "Errore di coneessione con l'url: ", url)
+        logger.error('Eccezzione: '+ str(e))
+        #print(Fore.RED + "Eccezzione di coneessione con l'url: ", url)
     return None
 
 def localAttack(url, originalResponse):
-    print("------LOCAL ATTACK------")
+    #print("------LOCAL ATTACK------")
 
     for header in headers:
         for parameter in parameters:
@@ -179,32 +188,9 @@ def localAttack(url, originalResponse):
                     logResult(logInfo, 2)
 
 
-#TODO: Da perfezionare
-def protocolAttack(url, originalResponse):
-    print("------PROTOCOLS ATTACK------")
-
-    for protocol in protocols:
-        newUrl = url+protocol+backurl+'/'
-        response = headersScan(newUrl,'GET',originalUrl=url)
-        logInfo={
-            'Hostname':url, 
-            'HeaderField':'N/A', 
-            'HeaderValue':protocol, 
-            'ResponseCode':'Error',
-            'ResponseSize':'Error'
-        }
-    if(response!=None):
-        if(checkDifferenceinResponse(originalResponse, response)):
-            testo = "Risposta differente con il parametro: ", protocol, " staus code: ",response.status, "e dimensione: ", sys.getsizeof(response.data)
-            logInfo['ResponseCode']=response.status
-            logInfo['ResponseSize']=sys.getsizeof(response.data)
-            logResult(logInfo, 2)
-    else:
-        print(Fore.RED + "Errore di connessione con il parametro: ", protocol)
-
 def remoteAttack(url):
     #logResult("------REMOTE ATTACK------",2)
-    print("------REMOTE ATTACK------")
+    #print("------REMOTE ATTACK------")
     for header in headers:
         badHeader = {header:backurl}
         headersScan(url,'GET', badHeaders=badHeader)
@@ -241,7 +227,6 @@ def checkDifferenceinResponse(response1, response2):
         return True
     return False
 
-
 def getHostnameFromUrl(url):
     return urlparse(url).netloc
 
@@ -270,10 +255,35 @@ def scanFile(filename):
     with open(filename) as file:
         while line := file.readline():
             url = line.rstrip()
-            scanUrl(url)
+            q.put(url)
+            #scanUrl(url)
+
+    num_threads = 15
+    for i in range(num_threads):
+        worker = Thread(target=scanUrls, args=(q,))
+        worker.start()
+
+    q.join()
 
 def scanUrl(url):
     performAllAttack(url)
+
+def scanUrls(q):
+    #url = q.get()
+    #performAllAttack(url)
+    #q.task_done()
+
+    while True:
+        url = q.get()
+        if url is None:
+            break
+        try:
+            performAllAttack(url)
+            q.task_done()
+        except Exception as e:
+            print(e)
+            q.task_done()
+            continue
 
 
 def main():
@@ -291,3 +301,32 @@ def main():
     
 
 main()
+
+
+
+'''
+#TODO: Da perfezionare
+def protocolAttack(url, originalResponse):
+    print("------PROTOCOLS ATTACK------")
+
+    for protocol in protocols:
+        newUrl = url+protocol+backurl+'/'
+        response = headersScan(newUrl,'GET',originalUrl=url)
+        logInfo={
+            'Hostname':url, 
+            'HeaderField':'N/A', 
+            'HeaderValue':protocol, 
+            'ResponseCode':'Error',
+            'ResponseSize':'Error'
+        }
+    if(response!=None):
+        if(checkDifferenceinResponse(originalResponse, response)):
+            testo = "Risposta differente con il parametro: ", protocol, " staus code: ",response.status, "e dimensione: ", sys.getsizeof(response.data)
+            logInfo['ResponseCode']=response.status
+            logInfo['ResponseSize']=sys.getsizeof(response.data)
+            logResult(logInfo, 2)
+    else:
+        print(Fore.RED + "Errore di connessione con il parametro: ", protocol)
+
+
+'''
