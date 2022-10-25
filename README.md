@@ -7,7 +7,7 @@ SSRF(Server-side request forgery) is a trending vulnerability identified in most
 ```
 git clone https://github.com/Dancas93/SSRF-Scanner.git
 cd SSRF-Scanner
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 ```
 
 **How To Use**
