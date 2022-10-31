@@ -27,5 +27,6 @@ With SSRF-Scanner you can also perform a reverse connection attack, example:
 
 
 ****Results****
+
 The program will create an output file in csv format in which all responses having response code or response size different from the standard one will be listed. 
 Also, if a backurl has been specified with the -b parameter, it is necessary to monitor the url to view any requests received. 
