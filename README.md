@@ -25,9 +25,3 @@ With SSRF-Scanner you can also perform a reverse connection attack, example:
 
 ****Results****
 SSRF-Scanner 
-
-****Todo****
-- [ ] refine protocols attack
-- [ ] add support to cookie
-- [ ] add enclosed parameters attack
-- [ ] add application login attack (es. parameters/form)
