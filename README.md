@@ -17,7 +17,7 @@ Print help menu
 
 You can choose if analyze a single url or a list of urls, example:
 for a single url: ```python3 ssrf.py -u https://google.com```
-for a list of url: ```python3 ssrf.py -f urls.txt```
+for a list of url: ```python3 ssrf.py -f urls.txt -c PHPSESSID=123456```
 
 With SSRF-Scanner you can also perform a reverse connection attack, example:
 ```python3 ssrf.py -u https://google.com -b http://pingb.in/p/bac42078d9061876cbc7ecf2220b```
