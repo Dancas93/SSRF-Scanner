@@ -1,0 +1,22 @@
+# Standard Protocols
+http://
+https://
+ftp://
+sftp://
+file://
+dict://
+gopher://
+ldap://
+ldaps://
+mysql://
+mongodb://
+postgres://
+redis://
+memcache://
+ws://
+wss://
+smtp://
+pop3://
+imap://
+jar://
+maven://

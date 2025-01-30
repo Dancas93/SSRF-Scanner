@@ -1,0 +1,34 @@
+# Double URL Encoding
+http%253A%252F%252F
+https%253A%252F%252F
+
+# Mixed Encoding
+http%3A%2F%2F
+htTp%3a%2f%2f
+
+# Case Variation
+hTTp://
+HttpS://
+
+# Unicode Encoding
+http://例子.测试
+http:/%2f%2f
+http:\\
+
+# Special Characters
+http://.../
+http://...\\
+http:////
+
+# Protocol Confusion
+http:http://
+http:https://
+https:http://
+
+# Null Byte
+http://127.0.0.1%00
+http://127.0.0.1%0d%0a
+
+# Directory Traversal
+http://../../
+http://../../../

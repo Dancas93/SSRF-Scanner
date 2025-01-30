@@ -1,0 +1,14 @@
+# DNS Rebinding Payloads
+127.0.0.1.nip.io
+127.0.0.1.xip.io
+127.0.0.1.localtest.me
+127.0.0.1.burpcollaborator.net
+spoofed.burpcollaborator.net
+127.0.0.1.nip.io:80
+127.0.0.1.nip.io:443
+localhost.nip.io
+localhost.xip.io
+localhost.localtest.me
+a.<BURP-COLLABORATOR>
+b.<BURP-COLLABORATOR>
+c.<BURP-COLLABORATOR>

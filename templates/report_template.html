@@ -1,0 +1,66 @@
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSRF Scan Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .summary { background: #f5f5f5; padding: 20px; margin-bottom: 20px; }
+        .chart { margin: 20px 0; }
+        .vulnerability { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
+        .vulnerable { color: #d9534f; }
+        .safe { color: #5cb85c; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid #ddd; }
+        th { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>SSRF Scan Report</h1>
+    <div class="summary">
+        <h2>Summary</h2>
+        <p>Scan completed: {{ timestamp }}</p>
+        <ul>
+            <li>Total URLs scanned: {{ summary.total_urls_scanned }}</li>
+            <li>Total requests: {{ summary.total_requests }}</li>
+            <li>Vulnerabilities found: {{ summary.total_vulnerabilities }}</li>
+            <li>Success rate: {{ "%.2f"|format(summary.success_rate) }}%</li>
+        </ul>
+    </div>
+
+    <div class="charts">
+        <h2>Analysis</h2>
+        {% for name, path in charts.items() %}
+        <div class="chart">
+            <h3>{{ name|title }}</h3>
+            <img src="{{ path }}" alt="{{ name }}">
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="vulnerabilities">
+        <h2>Detected Vulnerabilities</h2>
+        {% for type, results in vulnerabilities.items() %}
+        <div class="vulnerability">
+            <h3>{{ type }}</h3>
+            <table>
+                <tr>
+                    <th>URL</th>
+                    <th>Payload</th>
+                    <th>Response Code</th>
+                    <th>Verification</th>
+                </tr>
+                {% for result in results %}
+                <tr>
+                    <td>{{ result.url }}</td>
+                    <td>{{ result.payload }}</td>
+                    <td>{{ result.response_code }}</td>
+                    <td>{{ result.verification_method }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
