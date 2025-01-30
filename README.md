@@ -126,9 +126,12 @@ The scanner tests SSRF vulnerabilities through various HTTP headers
 
 ## Verification Methods
 ### Response AnalysisThe scanner verifies potential SSRF through:
-1. Status code comparison2. Response size differences
-2. Content type changes4. Response time variations
-3. Error message analysis
+1. Status code comparison
+2. Response size differences
+3. Content type changes
+4. Response time variations
+5. Error message analysis
+
 ### Vulnerability ConfirmationVulnerabilities are confirmed by:
 - Response pattern analysis- Content fingerprinting
 - Error message signatures- Timing analysis
@@ -136,8 +139,10 @@ The scanner tests SSRF vulnerabilities through various HTTP headers
 
 ## Output and Reporting
 ### Results FormatThe scanner generates three types of reports:
-1. Text Report: Human-readable findings2. CSV Report: Spreadsheet-compatible format
-2. JSON Report: Machine-readable format
+1. Text Report: Human-readable findings
+2. CSV Report: Spreadsheet-compatible format
+3. JSON Report: Machine-readable format
+   
 ### Report ContentsEach finding includes:
 - Target URL- Attack Type
 - Payload Used- Response Code
