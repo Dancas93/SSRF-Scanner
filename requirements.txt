@@ -1,18 +1,12 @@
-# Core requirements
-requests>=2.31.0
-urllib3>=2.1.0
-colorama>=0.4.6
+# Core async HTTP
+aiohttp>=3.9.1
 
 # Configuration and templating
 PyYAML>=6.0.1
 Jinja2>=3.1.2
 
-# HTTP components
-aiohttp>=3.9.1
-requests-toolbelt>=1.0.0
+# Terminal colors
+colorama>=0.4.6
 
 # Additional utilities
 python-dateutil>=2.8.2
-certifi>=2023.11.17
-chardet>=5.2.0
-idna>=3.6
