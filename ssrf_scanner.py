@@ -7,7 +7,7 @@ from aiohttp import ClientSession, ClientTimeout, TCPConnector
 import json
 import csv
 from datetime import datetime
-from urllib.parse import urlparse, quote, unquote
+from urllib.parse import urlparse, quote, unquote, parse_qsl, urlencode, urlunparse
 import logging
 import random
 import colorama
@@ -975,6 +975,9 @@ class SSRFScanner:
         self.payload_generator = PayloadGenerator()
         self.protocol_handler = ProtocolHandler()
         
+        # Static headers applied to all requests (set via -H/--header)
+        self.static_headers = {}
+        
         # Initialize async primitives
         self.semaphore = None  # Will be created in async context
         self.lock = None  # Async lock, created in async context
@@ -1085,7 +1088,11 @@ class SSRFScanner:
                 'User-Agent': self.config.scanner['user_agent'],
                 'Accept': '*/*'
             }
-            
+
+            # Apply static headers set from CLI (-H/--header), e.g. Authorization
+            if hasattr(self, "static_headers") and self.static_headers:
+                default_headers.update(self.static_headers)            
+           
             if headers:
                 default_headers.update(headers)
 
@@ -1483,6 +1490,111 @@ class SSRFScanner:
                     )
                     self.log_vulnerability(result)
 
+    async def parameterCallbackAttack(self, url, original_response):
+        """
+        For URLs that already have query parameters, replace each parameter's value
+        with SSRF callback-style payloads (Burp Collaborator / backurl variations).
+        """
+        # Parse URL and check for existing query params
+        parsed = urlparse(url)
+        if not parsed.query:
+            # No parameters to replace, nothing to do
+            return
+
+        # Original query params as list of (name, value) pairs
+        query_pairs = parse_qsl(parsed.query, keep_blank_values=True)
+
+        # Build callback-style payloads:
+        #  - Variations based on self.backurl (if provided)
+        #  - DNS rebinding payloads (with <BURP-COLLABORATOR> replaced when possible)
+        callback_payloads = []
+
+        # backurl-based variations (same idea as remoteAttack)
+        if self.backurl:
+            callback_payloads.extend([
+                self.backurl,
+                f"http://{self.backurl}",
+                f"https://{self.backurl}",
+                f"{self.backurl}/ssrf-test",
+                f"{self.backurl}?callback=true",
+                f"http://{self.backurl}:80",
+                f"http://{self.backurl}:443",
+                f"http://{self.backurl}:8080",
+                quote(f"http://{self.backurl}"),
+                quote(quote(f"http://{self.backurl}")),
+            ])
+
+        # DNS rebinding payloads (same semantics as dnsRebindingAttack)
+        for dns in self.dns_rebinding:
+            payload = dns
+            if '<BURP-COLLABORATOR>' in dns and self.backurl:
+                payload = dns.replace('<BURP-COLLABORATOR>', self.backurl)
+            callback_payloads.append(payload)
+
+        # Deduplicate while preserving order
+        callback_payloads = list(dict.fromkeys(callback_payloads))
+
+        if not callback_payloads:
+            # Nothing to inject
+            return
+
+        total_tests = len(query_pairs) * len(callback_payloads)
+        completed_tests = 0
+
+        tasks = []
+        meta = []  # (param_name, payload, test_url)
+
+        # For each parameter, create variants where its value is replaced
+        for idx, (name, value) in enumerate(query_pairs):
+            for payload in callback_payloads:
+                # Create a new list of query params with this one modified
+                new_pairs = [
+                    (n, payload if i == idx else v)
+                    for i, (n, v) in enumerate(query_pairs)
+                ]
+                new_query = urlencode(new_pairs, doseq=True)
+                new_url = urlunparse(parsed._replace(query=new_query))
+
+                tasks.append(self.make_request(new_url))
+                meta.append((name, payload, new_url))
+
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for (param_name, payload, test_url), response in zip(meta, responses):
+            completed_tests += 1
+            # Re-use "Parameter" phase for progress
+            if completed_tests % 20 == 0:
+                self.update_progress('Parameter', completed_tests, total_tests)
+
+            if not response or isinstance(response, Exception):
+                continue
+
+            is_vulnerable, differences = self.analyze_response(original_response, response)
+            if is_vulnerable:
+                # Record the finding
+                result = ScanResult(
+                    url=test_url,
+                    attack_type='ParameterCallback',
+                    payload=f"{param_name}={payload}",
+                    response_code=response.status_code,
+                    response_size=len(response.content),
+                    timestamp=datetime.now(),
+                    headers={},  # this attack is URL-parameter-based
+                    is_vulnerable=True,
+                    notes=str(differences)
+                )
+                # Try to verify with existing verification logic
+                result.verification_method = self.verify_vulnerability(
+                    test_url,
+                    payload,
+                    response,
+                    original_response
+                )
+                # Log + report
+                self.log_vulnerability(result)
+                if self.reporter:
+                    self.reporter.add_result(result)
+
     async def portScanAttack(self, url, original_response):
         """Perform SSRF port scan attack"""
         total_tests = len(self.headers) * len(self.port_payloads) * min(len(self.local_ips), 5)
@@ -1816,7 +1928,10 @@ class SSRFScanner:
             
             try:
                 self.progress.current_phase = "Parameter"
+                # Existing behavior: append extra parameters from payloads/parameter_payloads.txt
                 await self.parameterAttack(url, original_response)
+                # New behavior: replace existing parameter values with callback-style payloads
+                await self.parameterCallbackAttack(url, original_response)
             except Exception as e:
                 self.logger.error(f"Error in Parameter attack: {str(e)}")
             
@@ -2029,6 +2144,7 @@ def print_help():
     print("  -b, --backurl       : Callback URL for remote SSRF detection")
     print("  -d, --debug         : Enable debug mode")
     print("  -c, --cookie        : Manually set cookies (format: 'name1=value1; name2=value2')")
+    # Header
     print("  --concurrency N     : Number of concurrent requests (default: 200)")
     print("  --rate-limit N      : Max requests per second (default: 100)")
     print("  -q, --quiet         : Only show vulnerabilities (no progress)")
@@ -2044,10 +2160,14 @@ def print_help():
 
 async def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hu:f:b:dc:q",
-                                 ["help", "url=", "file=", "backurl=", "debug", "cookie=", 
-                                  "concurrency=", "rate-limit=", "quiet", "proxy=", 
-                                  "proxy-auth=", "output-format="])
+        opts, args = getopt.getopt(
+            sys.argv[1:], 
+            "hu:f:b:dc:qH:",   # added H:
+            ["help", "url=", "file=", "backurl=", "debug", "cookie=", 
+             "concurrency=", "rate-limit=", "quiet", "proxy=", 
+             "proxy-auth=", "output-format=", "header="]  # added header=
+        )
+
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(2)
@@ -2063,6 +2183,8 @@ async def main():
     proxy = None
     proxy_auth = None
     output_format = 'csv'
+    custom_headers = []  # list of raw "-H 'Name: value'" strings
+
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -2090,6 +2212,10 @@ async def main():
             proxy_auth = arg
         elif opt == "--output-format":
             output_format = arg
+        elif opt in ("-H", "--header"):
+            # e.g. -H "Authorization: Bearer xyz"
+            custom_headers.append(arg)
+
 
     if not (url or url_file):
         print("Error: Must provide either URL or file")
@@ -2102,6 +2228,19 @@ async def main():
         scanner.backurl = backurl
     if cookies:
         scanner.cookies = cookies
+
+    # Apply static headers from CLI (-H/--header) to all requests
+    if custom_headers:
+        # Ensure the attribute exists
+        if not hasattr(scanner, "static_headers"):
+            scanner.static_headers = {}
+        for hdr in custom_headers:
+            # Expect "Name: value"
+            name, sep, value = hdr.partition(':')
+            if not sep:
+                # Skip invalid header without ':'
+                continue
+            scanner.static_headers[name.strip()] = value.strip()
     
     # Apply CLI overrides
     scanner.config.scanner['concurrency'] = concurrency
