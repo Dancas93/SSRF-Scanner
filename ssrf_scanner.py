@@ -2144,7 +2144,7 @@ def print_help():
     print("  -b, --backurl       : Callback URL for remote SSRF detection")
     print("  -d, --debug         : Enable debug mode")
     print("  -c, --cookie        : Manually set cookies (format: 'name1=value1; name2=value2')")
-    # Header
+    print("  -H, --header        : Custom header to include in requests (format: 'Name: value')")
     print("  --concurrency N     : Number of concurrent requests (default: 200)")
     print("  --rate-limit N      : Max requests per second (default: 100)")
     print("  -q, --quiet         : Only show vulnerabilities (no progress)")
